@@ -11,7 +11,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const FROM_ADDRESS = 'RecoGST <otp@recogst.com>';
-export const FROM_ADDRESS_HELLO = 'RecoGST <hello@recogst.com>';
+export const FROM_ADDRESS_HELLO = 'RecoGST <sales@recogst.com>';
 
 export function corsHeaders(origin) {
   const allow = ALLOWED_ORIGINS.has(origin) ? origin : 'https://recogst.com';
