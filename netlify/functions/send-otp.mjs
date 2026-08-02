@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { corsHeaders, jsonResponse, preflightResponse, isValidEmail, generateOtp, getTransporter } from './_shared.mjs';
+import { jsonResponse, preflightResponse, isValidEmail, generateOtp, sendEmail } from './_shared.mjs';
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RESEND_COOLDOWN_MS = 45 * 1000; // 45 seconds between sends to the same email
@@ -33,10 +33,10 @@ export default async (req) => {
   const record = { otp, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0, lastSentAt: Date.now() };
 
   try {
-    await getTransporter().sendMail({
-      from: `RecoGST <${process.env.GMAIL_USER}>`,
+    await sendEmail({
       to: email,
       subject: `Your RecoGST verification code: ${otp}`,
+      text: `Your RecoGST verification code is ${otp}. It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
       html: `
         <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:420px;margin:0 auto;padding:32px 28px;border:1px solid #dfe9e3;border-radius:14px;">
           <div style="width:38px;height:38px;background:#107c41;color:#fff;font-weight:800;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:18px;">R</div>
@@ -48,7 +48,7 @@ export default async (req) => {
       `
     });
   } catch (err) {
-    console.error('sendMail failed', err);
+    console.error('sendEmail failed', err);
     return jsonResponse(502, { success: false, error: 'email_send_failed' }, origin);
   }
 

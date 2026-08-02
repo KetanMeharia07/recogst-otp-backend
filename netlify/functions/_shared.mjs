@@ -1,5 +1,3 @@
-import nodemailer from 'nodemailer';
-
 // Only recogst.com (and localhost, for testing) may call these endpoints.
 // Both http:// and https:// are listed because the site's SSL certificate
 // hasn't finished provisioning yet — remove the http:// entries once
@@ -11,6 +9,8 @@ const ALLOWED_ORIGINS = new Set([
   'http://www.recogst.com',
   'http://localhost:8080'
 ]);
+
+const FROM_ADDRESS = 'RecoGST <otp@recogst.com>';
 
 export function corsHeaders(origin) {
   const allow = ALLOWED_ORIGINS.has(origin) ? origin : 'https://recogst.com';
@@ -41,18 +41,26 @@ export function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-let transporter;
-export function getTransporter() {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
+// Sends via Resend's HTTP API, authenticated for recogst.com (SPF/DKIM verified)
+export async function sendEmail({ to, subject, html, text, replyTo }) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: FROM_ADDRESS,
+      to: [to],
+      subject,
+      html,
+      text,
+      ...(replyTo ? { reply_to: replyTo } : {})
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`Resend API error ${res.status}: ${errBody}`);
   }
-  return transporter;
+  return res.json();
 }

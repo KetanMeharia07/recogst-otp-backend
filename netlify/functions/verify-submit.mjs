@@ -1,7 +1,8 @@
 import { getStore } from '@netlify/blobs';
-import { corsHeaders, jsonResponse, preflightResponse, isValidEmail, getTransporter } from './_shared.mjs';
+import { jsonResponse, preflightResponse, isValidEmail, sendEmail } from './_shared.mjs';
 
 const MAX_ATTEMPTS = 5;
+const ENQUIRY_RECIPIENT = 'recogst.contact@gmail.com';
 
 function escapeHtml(str) {
   return String(str || '').replace(/[&<>"']/g, c => ({
@@ -59,11 +60,11 @@ export default async (req) => {
   await store.delete(email);
 
   try {
-    await getTransporter().sendMail({
-      from: `RecoGST Website <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER,
+    await sendEmail({
+      to: ENQUIRY_RECIPIENT,
       replyTo: email,
       subject: `New verified enquiry — RecoGST website (${name})`,
+      text: `New enquiry (email verified)\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || '—'}\n\nMessage:\n${message}`,
       html: `
         <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;">
           <h2 style="color:#143a2b;">New enquiry — email verified ✔</h2>
@@ -77,7 +78,7 @@ export default async (req) => {
       `
     });
   } catch (err) {
-    console.error('enquiry sendMail failed', err);
+    console.error('enquiry sendEmail failed', err);
     return jsonResponse(502, { success: false, error: 'email_send_failed' }, origin);
   }
 
