@@ -11,6 +11,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const FROM_ADDRESS = 'RecoGST <otp@recogst.com>';
+export const FROM_ADDRESS_HELLO = 'RecoGST <hello@recogst.com>';
 
 export function corsHeaders(origin) {
   const allow = ALLOWED_ORIGINS.has(origin) ? origin : 'https://recogst.com';
@@ -42,7 +43,7 @@ export function generateOtp() {
 }
 
 // Sends via Resend's HTTP API, authenticated for recogst.com (SPF/DKIM verified)
-export async function sendEmail({ to, subject, html, text, replyTo }) {
+export async function sendEmail({ to, subject, html, text, replyTo, from }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -50,7 +51,7 @@ export async function sendEmail({ to, subject, html, text, replyTo }) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: FROM_ADDRESS,
+      from: from || FROM_ADDRESS,
       to: [to],
       subject,
       html,

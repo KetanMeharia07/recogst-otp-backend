@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import { jsonResponse, preflightResponse, isValidEmail, sendEmail } from './_shared.mjs';
+import { jsonResponse, preflightResponse, isValidEmail, sendEmail, FROM_ADDRESS_HELLO } from './_shared.mjs';
 
 const MAX_ATTEMPTS = 5;
 const ENQUIRY_RECIPIENT = 'recogst.contact@gmail.com';
@@ -80,6 +80,30 @@ export default async (req) => {
   } catch (err) {
     console.error('enquiry sendEmail failed', err);
     return jsonResponse(502, { success: false, error: 'email_send_failed' }, origin);
+  }
+
+  // Confirmation to the visitor — best-effort, doesn't fail the request if it has a hiccup
+  try {
+    await sendEmail({
+      to: email,
+      from: FROM_ADDRESS_HELLO,
+      subject: `We've received your enquiry, ${name.split(' ')[0]}`,
+      text: `Hi ${name},\n\nThanks for reaching out to RecoGST — we've received your message and will get in touch shortly.\n\nYour message:\n${message}\n\n— Team RecoGST`,
+      html: `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:440px;margin:0 auto;padding:32px 28px;border:1px solid #dfe9e3;border-radius:14px;">
+          <div style="width:38px;height:38px;background:#107c41;color:#fff;font-weight:800;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:18px;">R</div>
+          <h2 style="color:#143a2b;margin:0 0 8px;">Thanks, ${escapeHtml(name.split(' ')[0])} — we've got it!</h2>
+          <p style="color:#5b6b7d;font-size:0.95rem;margin:0 0 20px;">Your enquiry has reached the RecoGST team. We usually reply within a few hours.</p>
+          <div style="background:#f2f9f5;border:1px solid #dfe9e3;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
+            <p style="color:#5b6b7d;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Your message</p>
+            <p style="color:#22313f;font-size:0.92rem;margin:0;">${escapeHtml(message)}</p>
+          </div>
+          <p style="color:#5b6b7d;font-size:0.85rem;margin:0;">— Team RecoGST</p>
+        </div>
+      `
+    });
+  } catch (err) {
+    console.error('visitor confirmation sendEmail failed', err);
   }
 
   return jsonResponse(200, { success: true }, origin);
