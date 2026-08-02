@@ -18,15 +18,14 @@ export function corsHeaders(origin) {
 }
 
 export function jsonResponse(statusCode, body, origin) {
-  return {
-    statusCode,
-    headers: corsHeaders(origin),
-    body: JSON.stringify(body)
-  };
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
+    headers: corsHeaders(origin)
+  });
 }
 
 export function preflightResponse(origin) {
-  return { statusCode: 204, headers: corsHeaders(origin), body: '' };
+  return new Response(null, { status: 204, headers: corsHeaders(origin) });
 }
 
 export function isValidEmail(email) {
