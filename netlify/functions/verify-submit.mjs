@@ -26,6 +26,7 @@ export default async (req) => {
   const otp = (body.otp || '').trim();
   const name = (body.name || '').trim();
   const phone = (body.phone || '').trim();
+  const requestFor = (body.requestFor || '').trim();
   const message = (body.message || '').trim();
 
   if (!isValidEmail(email) || !otp || !name || !message) {
@@ -63,8 +64,8 @@ export default async (req) => {
     await sendEmail({
       to: ENQUIRY_RECIPIENT,
       replyTo: email,
-      subject: `New verified enquiry — RecoGST website (${name})`,
-      text: `New enquiry (email verified)\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || '—'}\n\nMessage:\n${message}`,
+      subject: `New verified enquiry — RecoGST website (${name}${requestFor ? ` — ${requestFor}` : ''})`,
+      text: `New enquiry (email verified)\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || '—'}\nRequest for: ${requestFor || '—'}\n\nMessage:\n${message}`,
       html: `
         <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;">
           <h2 style="color:#143a2b;">New enquiry — email verified ✔</h2>
@@ -72,6 +73,7 @@ export default async (req) => {
             <tr><td style="padding:8px 0;color:#5b6b7d;width:110px;">Name</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(name)}</td></tr>
             <tr><td style="padding:8px 0;color:#5b6b7d;">Email</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(email)}</td></tr>
             <tr><td style="padding:8px 0;color:#5b6b7d;">Phone</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(phone) || '—'}</td></tr>
+            <tr><td style="padding:8px 0;color:#5b6b7d;">Request for</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(requestFor) || '—'}</td></tr>
             <tr><td style="padding:8px 0;color:#5b6b7d;vertical-align:top;">Message</td><td style="padding:8px 0;">${escapeHtml(message)}</td></tr>
           </table>
         </div>
