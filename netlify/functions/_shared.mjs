@@ -1,12 +1,7 @@
 // Only recogst.com (and localhost, for testing) may call these endpoints.
-// Both http:// and https:// are listed because the site's SSL certificate
-// hasn't finished provisioning yet — remove the http:// entries once
-// "Enforce HTTPS" is available and turned on in GitHub Pages settings.
 const ALLOWED_ORIGINS = new Set([
   'https://recogst.com',
   'https://www.recogst.com',
-  'http://recogst.com',
-  'http://www.recogst.com',
   'http://localhost:8080'
 ]);
 
